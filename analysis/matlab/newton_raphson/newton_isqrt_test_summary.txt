@@ -1,0 +1,6 @@
+Representative test count: 1326
+Mismatches: 0
+Max iterations observed: 17
+Example max-iteration cases (up to 20 shown):
+  3 (0x00000003)
+  8 (0x00000008)

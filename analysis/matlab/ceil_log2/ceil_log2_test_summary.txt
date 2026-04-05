@@ -1,0 +1,4 @@
+Representative test count: 1141
+Valid inputs tested (N >= 1): 1140
+Invalid inputs (N = 0): 1
+Mismatches: 0
