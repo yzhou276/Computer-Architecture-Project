@@ -1,18 +1,19 @@
 function [root, rem, iter] = isqrt_nonrestoring_nbit(x, N)
-% Unsigned N-bit integer square root
+% Unsigned N-bit integer square root using non-restoring method
+%
 % Returns:
 %   root = floor(sqrt(x))
 %   rem  = x - root^2
 %   iter = number of iterations
 %
 % Inputs:
-%   x : nonnegative integer
+%   x : nonnegative integer, 0 <= x < 2^N
 %   N : input bit width
 %
 % Notes:
-% - x must satisfy 0 <= x < 2^N
-% - works for odd or even N
-% - processes 2 input bits per iteration from MSB to LSB
+% - Processes the operand in 2-bit groups from MSB to LSB
+% - Supports odd or even N
+% - Internal remainder is signed
 
     % ----------------------------
     % Input checks
@@ -31,39 +32,71 @@ function [root, rem, iter] = isqrt_nonrestoring_nbit(x, N)
 
     x = uint64(x);
 
-    % Number of 2-bit groups
+    % Number of root bits / number of 2-bit groups
     num_groups = ceil(N / 2);
 
-    % Pad width to even number of bits
-    padded_N = 2 * num_groups;
+    % For odd N, the top group is effectively zero-padded on the left
+    total_bits = 2 * num_groups;
 
-    rem  = uint64(0);
+    % Signed partial remainder
+    P = int64(0);
+
+    % Partial root
     root = uint64(0);
+
     iter = 0;
 
     % ----------------------------
-    % Main loop: one root bit per iteration
+    % Main loop
     % ----------------------------
     for k = num_groups-1 : -1 : 0
         iter = iter + 1;
 
-        % Bring down next 2 bits from padded input
-        next2 = bitand(bitshift(x, -2*k), uint64(3));
+        % Bring down next 2 input bits from padded operand
+        shift_amt = 2 * k;
+        next2 = bitand(bitshift(x, -shift_amt), uint64(3));
 
-        % Shift remainder left by 2 and append next2
-        rem = bitor(bitshift(rem, 2), next2);
+        % Shift partial remainder left by 2 and append next2
+        % Since P is signed, do the append arithmetically
+        P = bitshift(P, 2) + int64(next2);
 
-        % Trial value
-        trial = bitor(bitshift(root, 2), uint64(1));
+        % Non-restoring update
+        if P >= 0
+            % Trial subtract
+            F = int64(bitshift(root, 2) + uint64(1));
+            P = P - F;
+        else
+            % Trial add
+            F = int64(bitshift(root, 2) + uint64(3));
+            P = P + F;
+        end
 
-        if rem >= trial
-            rem  = rem - trial;
-            root = bitor(bitshift(root, 1), uint64(1));
+        % Update root bit
+        if P >= 0
+            root = bitshift(root, 1) + uint64(1);
         else
             root = bitshift(root, 1);
         end
     end
 
-    % Cast root back to a compact type if desired
-    % Here I keep root as uint64 for generality
+    % ----------------------------
+    % Final remainder correction
+    % ----------------------------
+    if P < 0
+        P = P + int64(bitshift(root, 1) + uint64(1));
+    end
+
+    % True mathematical remainder
+    rem = uint64(P);
+
+    % Safety correction in case you want guaranteed floor(sqrt(x))
+    while root * root > x
+        root = root - 1;
+    end
+
+    while (root + 1) * (root + 1) <= x
+        root = root + 1;
+    end
+
+    rem = x - root * root;
 end

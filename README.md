@@ -58,3 +58,5 @@ I may explore how compilers work after this course, but for this project my focu
 2. [An Efficient Implementation of the Non-Restoring Square Root Algorithm in Gate Level](https://www.ijcte.org/papers/281-G850.pdf)
 
 3. [Parallel-array implementations of a non-restoring square root algorithm](https://ieeexplore.ieee.org/document/628940/metrics#metrics)
+
+4. [Non-Restoring Algorithm for Square Root](https://digitalsystemdesign.in/non-restoring-algorithm-for-square-root/?srsltid=AfmBOooe-J1mTJxCGnhCMuo_kYEsorPiwPaaQxmiC2l5sYe-qcwxKrWD)
