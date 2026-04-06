@@ -1,1 +1,6 @@
+# Vivado Project
 prj/
+RISCVpipelinedRV32IMFV1/
+
+# MATLAB temp files
+*.asv
