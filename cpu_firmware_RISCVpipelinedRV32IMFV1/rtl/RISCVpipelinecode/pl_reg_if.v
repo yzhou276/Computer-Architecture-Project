@@ -23,7 +23,7 @@ module pl_reg_if (pc,ins,clk, clrn, halt,dbg_imem_we, effectiveIMemAddr, dbg_ime
 //parameter IMEM_FILE = "C:/JHU_Classes/RISC_V/RISCV-cpu/Software/Assembly/FPUpipeline_test/imem.mem";
 //parameter IMEM_FILE = "D:/RISCV-cpu-prime-backup/Software/Assembly/FPU_test2/imem.mem";
 //parameter IMEM_FILE = "d:/mips-cpu/Software/Assembly/RISCVscmultiplytest/imem.mem";
-parameter IMEM_FILE = "C:/Users/zhouy2/Documents/JHU/Computer_architecture/riscv-prod/Software/Assembly/RISCVpipeLEDSwitches/imem.mem";
+parameter IMEM_FILE = "C:/Users/zhouy2/Documents/JHU/Computer-Architecture-Project/firmware/ricv_testcase/SWITCH7SEG_LOG2/imem.mem";
 
 
    

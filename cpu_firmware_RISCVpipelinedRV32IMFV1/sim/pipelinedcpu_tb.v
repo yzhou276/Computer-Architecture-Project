@@ -229,6 +229,12 @@ module pipelinedcpu_tb;
                             3'b111: begin opcode = "REMU    "; desc = "rd = rs1 % rs2 (unsigned)"; end
                             default: begin opcode = "N/A     "; desc = "undefined M-type op"; end
                         endcase
+                    end else if (instr_spy[31:25] == 7'b0001000) begin      // custom log2 and sqrt
+                        case (instr_spy[14:12])
+                            3'b000: begin opcode = "LOG2    "; desc = "rd = floor(log2(rs1))"; end
+                            3'b001: begin opcode = "SQRT    "; desc = "rd = sqrt(rs1)"; end
+                            default: begin opcode = "N/A     "; desc = "undefined custom op"; end
+                        endcase
                     end else begin // Standard R-type instructions
                         case (instr_spy[14:12])
                             3'b000: begin 
@@ -451,7 +457,7 @@ module pipelinedcpu_tb;
     initial begin
         IO_Switch = 16'haaaa;
         forever 
-            #100 IO_Switch = ~IO_Switch;
+         #100 IO_Switch = ~IO_Switch;
     end
 
     // Initialize other IO signals

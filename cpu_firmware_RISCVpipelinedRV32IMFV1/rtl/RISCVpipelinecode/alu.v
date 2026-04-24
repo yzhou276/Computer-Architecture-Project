@@ -12,35 +12,45 @@
 // x 1 1 0  LUI 6, e, lui
 // no operation:      jalr, jal
 
-module alu (a,b,aluc,r,z,v);                             // 32-bit alu with a zero flag
-    input  [31:0] a, b;                                // inputs: a, b
-    input   [3:0] aluc;                                // input:  alu control
-    output [31:0] r;                                   // output: alu result
-    output        z;                                   // output: zero flag
+module alu (a,b,aluc,r,z,v);                            // 32-bit alu with a zero flag
+    input  [31:0] a, b;                                 // inputs: a, b
+    input   [3:0] aluc;                                 // input:  alu control
+    output [31:0] r;                                    // output: alu result
+    output        z;                                    // output: zero flag
     output      v;                                      //overflow QIAN added
-    assign r = calc(a,b,aluc);                         // call function
-    assign z = ~|r;                                    // z = (r == 0)
+
+    // add the ceil(log2(a)) function for log2 instruction
+    wire [5:0] log2_result; // for log2 instruction
+    ceil_log2_32 log2_compute (.n(a), .y(log2_result)); // for log2 instruction
+
+    assign r = calc(a,b,aluc,log2_result);              // call function
+
+    assign z = ~|r;                                     // z = (r == 0)
+    
     assign v =  ~aluc[2] & ~a[31] & ~b[31] &  r[31] & ~aluc[1] & ~aluc[0] |
             ~aluc[2] &  a[31] &  b[31] & ~r[31] & ~aluc[1] & ~aluc[0] |
             ~aluc[2] & ~a[31] &  b[31] &  r[31] & ~aluc[1] & aluc[0] |
             ~aluc[2] &  a[31] & ~b[31] & ~r[31] & ~aluc[1] & aluc[0];
+
     function  [31:0] calc;                             // function
         input [31:0] a,b;                              // input
         input  [3:0] aluc;                             // input
+        input  [5:0] log2_result;                      // log2 result
         reg   [31:0] sub;                              // local variable
         begin
             sub = a - b;                               // for SUB and SLT
             casex(aluc)                                // allowing don't care
-                4'bx000: calc = a + b;                 // ADD, aluc: 0, 8
-                4'bx001: calc = sub;                   // SUB, aluc: 1, 9
-                4'bx010: calc = {31'b0,sub[31]};       // SLT, aluc: 2, a
-                4'b1011: calc = a ^ b;                 // XOR, aluc: b,
-                4'bx100: calc = a | b;                 // OR,  aluc: 4, c
-                4'bx101: calc = a & b;                 // AND, aluc: 5, d
-                4'b0011: calc = a << b[4:0];           // SLL, aluc: 3,
-                4'b0111: calc = a >> b[4:0];           // SRL, aluc: 7,
-                4'b1111: calc = $signed(a) >>> b[4:0]; // SRA, aluc: f,
-                4'bx110: calc = b;                     // LUI, aluc: 6, e
+                4'bx000: calc = a + b;                 // ADD,  aluc: 0, 8
+                4'bx001: calc = sub;                   // SUB,  aluc: 1, 9
+                4'bx010: calc = {31'b0,sub[31]};       // SLT,  aluc: 2, a
+                4'b1011: calc = a ^ b;                 // XOR,  aluc: b,
+                4'bx100: calc = a | b;                 // OR,   aluc: 4, c
+                4'bx101: calc = a & b;                 // AND,  aluc: 5, d
+                4'b0011: calc = a << b[4:0];           // SLL,  aluc: 3,
+                4'b0111: calc = a >> b[4:0];           // SRL,  aluc: 7,
+                4'b1111: calc = $signed(a) >>> b[4:0]; // SRA,  aluc: f,
+                4'b0110: calc = b;                     // LUI,  aluc: 6,
+                4'b1110: calc = {26'b0, log2_result};  // LOG2, aluc: e
                 default: calc = 32'b0;  // default is 0   NEW
             endcase
         end

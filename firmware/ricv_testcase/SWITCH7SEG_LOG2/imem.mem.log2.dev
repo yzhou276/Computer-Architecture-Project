@@ -1,0 +1,22 @@
+bf8005b7    // | 10111111100000000000 (bf800) 01011 (rd = x11/a1) 0110111                      
+lui   a1, 0xbf800,      a1 = 0xbf800000
+00458593    // | 000000000100 (4) 01011 (rs1 = x11/a1) 000 01011 (rd = x11/a1) 0010011     
+addi  a1, a1, 4,       a1 = 0xbf800004
+0005a283    // | 000000000000 (0) 01011 (rs1 = x11/a1) 010 00101 (rd = x5/t0)  0000011     
+lw    t0, 0(a1),       t0 = Mem[a1 + 0]
+bf800537    // | 10111111100000000000 (bf800) 01010 (rd = x10/a0) 0110111                      
+lui   a0, 0xbf800,      a0 = 0xbf800000
+10028333    // | 0001000 00000 (rs2 = x0)    00101 (rs1 = x5/t0) 000 00110 (rd = x6/t1) 0110011   
+log2  t1, t0, x0
+00552023    // | 0000000 00101 (rs2 = x5/t0) 01010 (rs1 = x10/a0) 010 00000 0100011         
+sw    t0, 0(a0),       Mem[a0 + 0] = t0
+fe9ff0ef    // | J-type imm = 1 11111111 1 1111110100 0 (-24), rd = x1/ra, opcode = 1101111      
+jal   ra, next
+
+1. Build the switch input address 0xbf800004
+2. Read the switches into t0
+3. Build the LED output address 0xbf800000
+4. Compute log2(t0) into t1
+5. Write the original switch value t0 to the LEDs
+6. Jump back and repeat forever
+

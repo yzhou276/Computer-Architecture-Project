@@ -79,7 +79,9 @@ module pl_id_cu (
     wire i_xor   = ~ecancel & (opcode == 7'b0110011) & (func3 == 3'b100) & (func7 == 7'b0000000);
     wire i_or    = ~ecancel & (opcode == 7'b0110011) & (func3 == 3'b110) & (func7 == 7'b0000000);
     wire i_and   = ~ecancel & (opcode == 7'b0110011) & (func3 == 3'b111) & (func7 == 7'b0000000);
-
+    // CUSTOM instruction for log2
+    wire i_log2  = ~ecancel & (opcode == 7'b0110011) & (func3 == 3'b000) & (func7 == 7'b0001000);
+    
     // RV32M Instructions
     wire i_mul    = (opcode == 7'b0110011) & (func3 == 3'b000) & (func7 == 7'b0000001);
     wire i_mulh   = (opcode == 7'b0110011) & (func3 == 3'b001) & (func7 == 7'b0000001);
@@ -89,6 +91,9 @@ module pl_id_cu (
     wire i_divu   = (opcode == 7'b0110011) & (func3 == 3'b101) & (func7 == 7'b0000001);
     wire i_rem    = (opcode == 7'b0110011) & (func3 == 3'b110) & (func7 == 7'b0000001);
     wire i_remu   = (opcode == 7'b0110011) & (func3 == 3'b111) & (func7 == 7'b0000001);
+    // CUSTOM instruction for sqrt
+    wire i_sqrt   = (opcode == 7'b0110011) & (func3 == 3'b001) & (func7 == 7'b0001000);
+
     
     // RV32F Floating-Point Instructions (basic, non-fused)
     wire i_fadd = ~ecancel & (opcode == 7'b1010011) & (func7 == 7'b0000000); // & (func3 == 3'b000);
@@ -151,9 +156,9 @@ module pl_id_cu (
 
     // Control logic
     assign aluc[0] = i_sub | i_xori | i_xor | i_andi  | i_slli | i_srli | i_srai;
-    assign aluc[1] = i_xor | i_slli | i_srli | i_srai | i_xori | i_beq | i_bne | i_lui;
-    assign aluc[2] = i_or | i_srli | i_srai | i_ori | i_lui | i_andi;
-    assign aluc[3] = i_xori | i_xor | i_srai;
+    assign aluc[1] = i_xor | i_slli | i_srli | i_srai | i_xori | i_beq | i_bne | i_lui | i_log2;
+    assign aluc[2] = i_or | i_srli | i_srai | i_ori | i_lui | i_andi | i_log2;
+    assign aluc[3] = i_xori | i_xor | i_srai | i_log2;
 
     assign m2reg = i_lw;
     assign pcsrc[0] = (i_beq & z) | (i_bne & ~z) | i_jal;
@@ -172,7 +177,7 @@ module pl_id_cu (
                    i_ori | i_andi | i_slli | i_srli | i_srai |
                    i_add | i_sub | i_slt | i_xor | i_or | i_and | 
                    i_mul | i_mulh | i_mulhsu | i_mulhu | i_div | i_divu | i_rem |
-                   i_remu |i_auipc) & wpcir;
+                   i_remu |i_auipc | i_sqrt | i_log2) & wpcir;
 
 
     
@@ -248,7 +253,7 @@ module pl_id_cu (
                                  i_xor | i_or | i_and | i_mul | i_mulh | i_mulhsu |
                                  i_mulhu  | i_div | i_divu  | i_rem  | i_remu |
                                  i_fadd | i_fsub | i_fmul | i_fdiv | i_fsqrt |
-                                 i_lwc1 | i_swc1 | i_nop| i_auipc);
+                                 i_lwc1 | i_swc1 | i_nop| i_auipc | i_sqrt | i_log2);
     //  wire rd_is_status = (rd == 5'd12);                    // is cp0 status reg
     //  wire rd_is_cause  = (rd == 5'd13);                    // is cp0 cause reg
     //  wire rd_is_epc    = (rd == 5'd14);                    // is cp0 epc reg
