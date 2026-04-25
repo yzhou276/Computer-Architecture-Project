@@ -1,8 +1,15 @@
-module pl_reg_de ( cancel, wreg, m2reg, wmem, call, rv32m, 
+// original module top-level
+// module pl_reg_de ( cancel, wreg, m2reg, wmem, call, rv32m, 
+//         aluc, func3, dpc4, da, db, dd, rs1, rs2, rd, fuse, start_sdivide,start_udivide, clk,clrn,
+//                       ecancel,ewreg,em2reg,ewmem,ecall,erv32m, efuse,
+//                        ealuc,efunc3, epc4, ea,eb, ers1, ers2, erd, estart_sdivide,estart_udivide,
+//                        wremw,wfpr, ewfpr,ejal,jal,efwdfe,ed,fwdfe,is_auipc, e_is_auipc);
+module pl_reg_de ( cancel, wreg, m2reg, wmem, call, rv32m,
         aluc, func3, dpc4, da, db, dd, rs1, rs2, rd, fuse, start_sdivide,start_udivide, clk,clrn,
                       ecancel,ewreg,em2reg,ewmem,ecall,erv32m, efuse,
                        ealuc,efunc3, epc4, ea,eb, ers1, ers2, erd, estart_sdivide,estart_udivide,
-                       wremw,wfpr, ewfpr,ejal,jal,efwdfe,ed,fwdfe,is_auipc, e_is_auipc);
+                       wremw,wfpr, ewfpr,ejal,jal,efwdfe,ed,fwdfe,is_auipc, e_is_auipc,
+                       sqrt, start_sqrt, esqrt, estart_sqrt);
     input clk;
     input clrn;
     input cancel;
@@ -51,6 +58,12 @@ module pl_reg_de ( cancel, wreg, m2reg, wmem, call, rv32m,
     input fwdfe;
     input is_auipc;
     output reg e_is_auipc;
+
+  // Integer sqrt accelerator
+    input  sqrt;
+    input  start_sqrt;
+    output reg esqrt;
+    output estart_sqrt;
     
 //    reg [31:0] eb;
     reg ecancel;
@@ -73,6 +86,9 @@ module pl_reg_de ( cancel, wreg, m2reg, wmem, call, rv32m,
     
     assign estart_sdivide = start_sdivide;
     assign estart_udivide = start_udivide;
+    // start_sqrt is a one-cycle pulse from ID; pass it through to EXE
+    // combinationally, matching the start_sdivide/start_udivide pattern.
+    assign estart_sqrt    = start_sqrt;
    
     always @(negedge clrn or posedge clk)
        if (!clrn) begin
@@ -98,6 +114,7 @@ module pl_reg_de ( cancel, wreg, m2reg, wmem, call, rv32m,
             ejal <= 0;
             efwdfe <= 0;
             e_is_auipc <= 0;
+            esqrt <= 0;
                         
      	
        end else begin
@@ -136,6 +153,7 @@ module pl_reg_de ( cancel, wreg, m2reg, wmem, call, rv32m,
                 ejal <= jal;
                 efwdfe <= fwdfe;
                 e_is_auipc <= is_auipc;
+                esqrt <= sqrt;
       		end
        end 
 endmodule       

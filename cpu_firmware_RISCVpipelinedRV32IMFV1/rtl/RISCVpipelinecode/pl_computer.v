@@ -131,6 +131,11 @@ module pl_computer (      // pipelined cpu
     wire          mdwait;
     wire          start_sdivide,start_udivide,wremw;
     wire is_auipc, e_is_auipc;
+    // Integer sqrt accelerator control wires
+    wire sqrt;          // sustained: i_sqrt in ID
+    wire start_sqrt;    // 1-cycle pulse on i_sqrt rising edge
+    wire esqrt;         // sustained: i_sqrt in EXE
+    wire estart_sqrt;   // 1-cycle pulse seen by isqrt unit in EXE
     
     // program counter
     pl_reg_pc prog_cnt (npc,wpcir,clk,clrn, pc);
@@ -147,7 +152,7 @@ module pl_computer (      // pipelined cpu
                           .efuse(efuse),.erv32m(erv32m),.start_sdivide(start_sdivide),.start_udivide(start_udivide),.wremw(wremw),.is_fpu(is_fpu),.fc(fc),.fs(fs),.ft(ft),.e1n(e1n),.e2n(e2n),.e3n(e3n),
                           .mwfpr(mwfpr),.ewfpr(ewfpr),.wf(wf),.e1w(e1w),.e2w(e2w),.e3w(e3w),.stall_div_sqrt(stall_div_sqrt),.st(1'b0),.wfpr(wfpr),
                           .fwdla(fwdla),.fwdlb(fwdlb),.fwdfa(fwdfa),.fwdfb(fwdfb),.fwdfe(fwdfe),.e3d(e3d),.dfb(dfb),.ed(ed),.efwdfe(efwdfe),
-                          .edata(edata),.is_auipc(is_auipc),.jal(jal),.z(z));                // ID stage
+                          .edata(edata),.is_auipc(is_auipc),.jal(jal),.z(z),.sqrt(sqrt),.start_sqrt(start_sqrt));                // ID stage
     // ID/EXE pipeline register
     pl_reg_de de_reg   (.cancel(cancel), .wreg(wreg), .m2reg(m2reg), .wmem(wmem), .call(call), .rv32m(rv32m),
             .aluc(aluc), .func3(func3), .dpc4(dpc4), .da(da), .db(db), .dd(dd), .rs1(rs1), .rs2(rs2), .rd(rd), 
@@ -156,28 +161,31 @@ module pl_computer (      // pipelined cpu
                           .ealuc(ealuc), .efunc3(efunc3), .epc4(epc4), .ea(ea) ,.eb(eb), .ers1(ers1), .ers2(ers2), .erd(erd),
                           .estart_sdivide(estart_sdivide),.estart_udivide(estart_udivide),
                           .wremw(wremw),.wfpr(wfpr), .ewfpr(ewfpr), .ejal(ejal), .jal(jal), .efwdfe(efwdfe) , .ed(ed),.fwdfe(fwdfe),
-                          .is_auipc(is_auipc),.e_is_auipc(e_is_auipc)         
+                          .is_auipc(is_auipc),.e_is_auipc(e_is_auipc),
+                          .sqrt(sqrt),.start_sqrt(start_sqrt),.esqrt(esqrt),.estart_sqrt(estart_sqrt)
                           );
 
     pl_stage_exe exe_stage (
-    .clk(clk), 
-    .clrn(clrn), 
-    .ea(ea),
-    .eb(eb),
-    .epc4(epc4),
-    .ealuc(ealuc),
-    .ecall(ecall), 
-    .ers1(ers1), 
-    .ers2(ers2), 
-    .efunc3(efunc3), 
-    .efuse(efuse), 
-    .erv32m(erv32m), 
-    .estart_sdivide(estart_sdivide),
-    .estart_udivide(estart_udivide),
-    .eal(eal), 
-    .mdwait(mdwait), 
-    .zout(zout),
-    .eis_fpu(eis_fpu));   
+        .clk(clk), 
+        .clrn(clrn), 
+        .ea(ea),
+        .eb(eb),
+        .epc4(epc4),
+        .ealuc(ealuc),
+        .ecall(ecall),
+        .ers1(ers1),
+        .ers2(ers2),
+        .efunc3(efunc3),
+        .efuse(efuse),
+        .erv32m(erv32m),
+        .estart_sdivide(estart_sdivide),
+        .estart_udivide(estart_udivide),
+        .eal(eal), 
+        .mdwait(mdwait), 
+        .zout(zout),   
+        .eis_fpu(eis_fpu),
+        .esqrt(esqrt),
+        .estart_sqrt(estart_sqrt));  
     
  
                     // EXE stage

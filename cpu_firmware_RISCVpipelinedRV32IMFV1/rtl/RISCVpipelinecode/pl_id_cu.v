@@ -36,6 +36,11 @@ module pl_id_cu (
     output [1:0] fwda,
     output [1:0] fwdb,
     output start_sdivide,start_udivide,
+
+    // Integer sqrt accelerator (custom R-type, opcode 0110011 / func3 001 / func7 0001000)
+    output       sqrt,         // sustained: current ID instruction is i_sqrt
+    output       start_sqrt,   // one-cycle pulse on i_sqrt rising edge in ID
+    
     //fpu I/O
     output wire is_fpu,
     output [2:0] fc,
@@ -119,8 +124,11 @@ module pl_id_cu (
                (csr_addr == 12'b000000000000); // immediate = 0  
     
     // Register source use
+    // i_log2 and i_sqrt both consume rs1 as their operand,
+    // so include them so forwarding/load-use logic covers them.
     wire i_rs1 = i_jalr | i_beq | i_bne | i_lw | i_sw | i_addi | i_xori | i_ori |
-                 i_andi | i_slli | i_srli | i_srai | i_add | i_sub | i_slt | i_xor | i_or | i_and;
+                 i_andi | i_slli | i_srli | i_srai | i_add | i_sub | i_slt | i_xor | i_or | i_and |
+                 i_log2 | i_sqrt;
 
     wire i_rs2 = i_beq | i_bne | i_sw | i_add | i_sub | i_slt | i_xor | i_or | i_and ;
     
@@ -167,7 +175,7 @@ module pl_id_cu (
     assign alui[0] = i_lui | i_slli | i_srli | i_srai;
     assign alui[1] = i_lui | i_sw | i_swc1;
     assign bimm = i_sw | i_lw | i_addi | i_lui | i_slli | i_srli | i_srai | i_xori | i_ori | i_andi |i_swc1| i_lwc1|i_auipc;
-    assign rv32m = i_mul | i_mulh | i_mulhsu | i_mulhu | i_div | i_divu | i_rem | i_remu;
+    assign rv32m = i_mul | i_mulh | i_mulhsu | i_mulhu | i_div | i_divu | i_rem | i_remu | i_sqrt;
     //assign fuse = 1'b0; // Not defined - placeholder
 
     //assign wpcir = ~(ewreg & em2reg & (erd != 0) &
@@ -341,6 +349,17 @@ module pl_id_cu (
     .mul_fuse(mul_fuse),
     .rem_fuse(rem_fuse)
 );
+
+    // Integer SQRT control:
+    // sqrt is held high while the i_sqrt instruction sits in ID
+    // (pipeline may stall due to busy sqrt unit, mdwait pulled low).
+    // start_sqrt is a one-cycle pulse on rising edge of i_sqrt,
+    // following the same pattern as start_sdivide / start_udivide.
+    assign sqrt = i_sqrt;
+    PulseGenerator PulseSqrt(
+        .clk(clk),
+        .request(i_sqrt),
+        .pulse(start_sqrt));
 
   // wire start_sdivide,start_udivide;
     
