@@ -59,7 +59,10 @@ module pl_id_cu (
     input [31:0] mie,
     output [1:0] csrrs,   // mtc0
     output is_auipc,
-    input v 
+    input v,
+    // Branch comparators computed in ID (parallel to z for beq/bne).
+    // lt  = signed   ($signed(da) <  $signed(dd))
+    input        lt
     );
 
     // Instruction decode
@@ -69,6 +72,7 @@ module pl_id_cu (
     wire i_jalr  = ~ecancel & (opcode == 7'b1100111) & (func3 == 3'b000);
     wire i_beq   = ~ecancel & (opcode == 7'b1100011) & (func3 == 3'b000);
     wire i_bne   = ~ecancel & (opcode == 7'b1100011) & (func3 == 3'b001);
+    wire i_blt   = ~ecancel & (opcode == 7'b1100011) & (func3 == 3'b100);
     wire i_lw    = ~ecancel & (opcode == 7'b0000011) & (func3 == 3'b010);
     wire i_sw    = ~ecancel & (opcode == 7'b0100011) & (func3 == 3'b010);
     wire i_addi  = ~ecancel & (opcode == 7'b0010011) & (func3 == 3'b000);
@@ -126,11 +130,11 @@ module pl_id_cu (
     // Register source use
     // i_log2 and i_sqrt both consume rs1 as their operand,
     // so include them so forwarding/load-use logic covers them.
-    wire i_rs1 = i_jalr | i_beq | i_bne | i_lw | i_sw | i_addi | i_xori | i_ori |
+    wire i_rs1 = i_jalr | i_beq | i_bne | i_blt | i_lw | i_sw | i_addi | i_xori | i_ori |
                  i_andi | i_slli | i_srli | i_srai | i_add | i_sub | i_slt | i_xor | i_or | i_and |
                  i_log2 | i_sqrt;
 
-    wire i_rs2 = i_beq | i_bne | i_sw | i_add | i_sub | i_slt | i_xor | i_or | i_and ;
+    wire i_rs2 = i_beq | i_bne | i_blt | i_sw | i_add | i_sub | i_slt | i_xor | i_or | i_and ;
     
     wire       i_fs = i_fadd | i_fsub | i_fmul | i_fdiv | i_fsqrt; // use fs
     wire       i_ft = i_fadd | i_fsub | i_fmul | i_fdiv;           // use ft
@@ -169,7 +173,12 @@ module pl_id_cu (
     assign aluc[3] = i_xori | i_xor | i_srai | i_log2;
 
     assign m2reg = i_lw;
-    assign pcsrc[0] = (i_beq & z) | (i_bne & ~z) | i_jal;
+    // PCSRC[0] = "take a non-jalr branch / jal".
+    //   beq  : equal           -> z
+    //   bne  : not equal       -> ~z
+    //   blt  : signed   <      -> lt
+    assign pcsrc[0] = (i_beq & z) | (i_bne & ~z) |
+                      (i_blt & lt) | i_jal;
     assign pcsrc[1] = i_jal | i_jalr;
     assign calls = i_jal | i_jalr;
     assign alui[0] = i_lui | i_slli | i_srli | i_srai;
@@ -255,7 +264,7 @@ module pl_id_cu (
     wire i_ecall = (opcode == 7'b1110011) && (func3 == 3'b000) && (csr_addr == 12'h000); // i_syscall = ecall in riscv 
     wire mret = i_mret;
     wire unimplemented_inst =  ~(i_csrrw | i_csrrs | i_mret | i_ecall | i_lui |
-                                 i_jal | i_jalr| i_beq | i_bne | i_lw| i_sw | 
+                                 i_jal | i_jalr| i_beq | i_bne | i_blt | i_lw| i_sw | 
                                  i_addi | i_xori | i_ori | i_andi | i_slli| 
                                  i_srli | i_srai | i_add  | i_sub | i_slt |
                                  i_xor | i_or | i_and | i_mul | i_mulh | i_mulhsu |

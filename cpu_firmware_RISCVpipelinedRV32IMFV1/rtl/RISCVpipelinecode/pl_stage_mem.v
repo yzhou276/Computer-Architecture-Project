@@ -52,7 +52,13 @@ module pl_stage_mem (mwmem,mal,md,clk, clrn, mm,dbg_dmem_ce, dbg_dmem_we,dbg_dme
 //	parameter DMEM_FILE = "C:/JHU_Classes/RISC_V/RISCV-cpu/Software/Assembly/FPUpipeline_test/dmem.mem";
 	//parameter DMEM_FILE = "d:/RISCV-cpu-prime-backup/Software/Assembly/FPU_test2/dmem.mem";
     //parameter DMEM_FILE = "d:/mips-cpu/Software/Assembly/RISCVscmultiplytest/dmem.mem";
-    parameter DMEM_FILE = "C:/Users/zhouy2/Documents/JHU/Computer_architecture/riscv-prod/Software/Assembly/RISCVpipeLEDSwitches/dmem.mem";
+    //parameter DMEM_FILE = "C:/Users/zhouy2/Documents/JHU/Computer_architecture/riscv-prod/Software/Assembly/RISCVpipeLEDSwitches/dmem.mem";
+        // parameter DMEM_FILE = "C:/Users/zhouy2/Documents/JHU/Computer-Architecture-Project/firmware/ricv_testcase/SWITCH7SEG_ISQRT/dmem.mem";
+        
+        // parameter DMEM_FILE = "C:/Users/zhouy2/Documents/JHU/Computer-Architecture-Project/firmware/ricv_testcase/SWITCH7SEG_LOG2/dmem.mem";
+        // parameter DMEM_FILE = "C:/Users/zhouy2/Documents/JHU/Computer-Architecture-Project/firmware/ricv_testcase/SWITCH7SEG_ISQRT_SW/dmem.mem";
+        // parameter DMEM_FILE = "C:/Users/zhouy2/Documents/JHU/Computer-Architecture-Project/firmware/ricv_testcase/SWITCH7SEG_LOG2_SW/dmem.mem";
+        parameter DMEM_FILE = "C:/Users/zhouy2/Documents/JHU/Computer-Architecture-Project/firmware/ricv_testcase/SWITCH7SEG_ISQRT_SW/dmem.mem";
     
     	pipelinedcpu_decode pipelinedcpu_decode(mal,HSEL);
      	wire effectiveDMemWE = dbg_dmem_ce ? dbg_dmem_we : mwmem;

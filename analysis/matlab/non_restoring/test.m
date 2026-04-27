@@ -1,0 +1,1 @@
+lol = isqrt_nonrestoring_nbit(21845,32)

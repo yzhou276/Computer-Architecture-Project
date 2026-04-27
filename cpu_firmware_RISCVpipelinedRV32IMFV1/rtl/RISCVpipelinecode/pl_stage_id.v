@@ -10,7 +10,8 @@ module pl_stage_id (mrd,mm2reg,mwreg,erd,em2reg,ewreg,ecancel,mdwait,dpc,inst,
                           efuse,erv32m,start_sdivide,start_udivide,wremw,is_fpu,fc,fs,ft,e1n,e2n,e3n,mwfpr,
                           ewfpr,wf,e1w,e2w,e3w,stall_div_sqrt,st,wfpr,fwdla,fwdlb,fwdfa,fwdfb,fwdfe,
                           e3d,dfb,ed,efwdfe,edata,jal,is_auipc,z,
-                          sqrt,start_sqrt);// ID stage)
+                          sqrt,start_sqrt,
+                          lt);// ID stage)
 
     input         clk, clrn;                           // clock and reset
     input  [31:0] dpc;                                // pc+4 in ID
@@ -70,6 +71,8 @@ module pl_stage_id (mrd,mm2reg,mwreg,erd,em2reg,ewreg,ecancel,mdwait,dpc,inst,
     // Integer sqrt accelerator control (decoded in pl_id_cu)
     output sqrt;
     output start_sqrt;
+    // branch less than result
+    input lt;
 
     // instruction fields
     wire    [6:0] op   = inst[6:0];               // op
@@ -177,7 +180,8 @@ module pl_stage_id (mrd,mm2reg,mwreg,erd,em2reg,ewreg,ecancel,mdwait,dpc,inst,
         .is_auipc(is_auipc),
         .fwdfe(fwdfe),
         .sqrt(sqrt),
-        .start_sqrt(start_sqrt));    // control unit
+        .start_sqrt(start_sqrt),
+        .lt(lt));    // control unit
     regfile r_f (rs1,rs2,wres,wrd,wwreg,~clk,clrn,qa,qb); // register file
 
     mux4x32 s_a (qa,eal,mal,mm,fwda,da);             // forward for alu a
